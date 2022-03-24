@@ -25,5 +25,8 @@ namespace Nomina2022.Modelos
 
         [Required]
         public string Departamento { get; set; }
+
+        [Required]
+        public int Salario { get; set; }
     }
 }

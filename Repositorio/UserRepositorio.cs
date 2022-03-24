@@ -1,9 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using Nomina2022.Data;
 using Nomina2022.Modelos;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Nomina2022.Repositorio
@@ -11,24 +15,40 @@ namespace Nomina2022.Repositorio
     public class UserRepositorio : IUserRepositorio
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public UserRepositorio(ApplicationDbContext db)
+        public UserRepositorio(ApplicationDbContext db, IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
-        public Task<string> Login(string userName, string password)
+        public async Task<string> Login(string userName, string password)
         {
-            throw new NotImplementedException();
+            var user = await _db.Users.FirstOrDefaultAsync(
+                x => x.UserName.ToLower().Equals(userName.ToLower()));
+
+            if (user == null)
+            {
+                return "nouser";
+            }
+            else if(!VerificarPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                return "wrongrespuesta";
+            }
+            else
+            {
+                return CrearToken(user);
+            }
         }
 
-        public async Task<int> Register(User user, string password)
+        public async Task<string> Register(User user, string password)
         {
             try
             {
                 if (await UserExiste(user.UserName))
                 {
-                    return -1;
+                    return "existe";
                 }
 
                 CrearPasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -38,12 +58,12 @@ namespace Nomina2022.Repositorio
 
                 await _db.Users.AddAsync(user);
                 await _db.SaveChangesAsync();
-                return user.Id;
+                return CrearToken(user);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
-                return -500;
+                return "error";
             }
         }
 
@@ -63,6 +83,48 @@ namespace Nomina2022.Repositorio
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
             }
+        }
+
+        public bool VerificarPasswordHash(string password, byte[] passwordHash,byte[] passwordSalt)
+        {
+            using (var hmac = new System.Security.Cryptography.HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                for (int i = 0; i < computedHash.Length; i++)
+                {
+                    if (computedHash[i] != passwordHash[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        private string CrearToken(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.
+                GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = System.DateTime.Now.AddDays(1),
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
     }
 }

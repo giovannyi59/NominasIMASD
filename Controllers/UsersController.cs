@@ -33,14 +33,14 @@ namespace Nomina2022.Controllers
                     UserName = user.UserName
                 },    user.Password);
 
-            if (respuesta==-1)
+            if (respuesta== "existe")
             {
                 _response.IsSuccess = false;
                 _response.DisplayMessage = "Usuario ya existe";
                 return BadRequest(_response);
             }
 
-            if (respuesta == -500)
+            if (respuesta == "error")
             {
                 _response.IsSuccess = false;
                 _response.DisplayMessage = "Error al crear el usuario";
@@ -48,10 +48,47 @@ namespace Nomina2022.Controllers
             }
 
             _response.DisplayMessage = "Usuario creado con exito";
-            _response.Result = respuesta;
+            //_response.Result = respuesta;
+            JwTPackage jtp = new JwTPackage();
+            jtp.UserName = user.UserName;
+            jtp.Token = respuesta;
+            _response.Result = jtp;
             return Ok(_response);
             
         }
 
+        [HttpPost("Login")]
+        public async Task<ActionResult> Login(UserDto user)
+        {
+            var respuesta = await _userRepositorio.Login(user.UserName, user.Password);
+
+            if (respuesta == "nouser")
+            {
+                _response.IsSuccess = false;
+                _response.DisplayMessage = "Usuario no existe";
+                return BadRequest(_response);
+            }
+            if (respuesta == "wrongrespuesta")
+            {
+                _response.IsSuccess = false;
+                _response.DisplayMessage = "Password incorrecta";
+                return BadRequest(_response);
+            }
+
+            //_response.Result = respuesta;
+            JwTPackage jtp = new JwTPackage();
+            jtp.UserName = user.UserName;
+            jtp.Token = respuesta;
+            _response.Result = jtp;            
+            _response.DisplayMessage = "Usuario conectado";
+            return Ok(_response);
+        }
+
+    }
+
+    public class JwTPackage
+    {
+        public string UserName { get; set; }
+        public string Token { get; set; }
     }
 }

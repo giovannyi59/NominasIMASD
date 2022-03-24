@@ -19,5 +19,7 @@ namespace Nomina2022.Modelos.Dto
         public string Telefono { get; set; }
 
         public string Departamento { get; set; }
+
+        public int Salario { get; set; }
     }
 }

@@ -150,3 +150,7 @@ C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Microsoft.Exte
 C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Microsoft.Extensions.Primitives.dll
 C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Swashbuckle.AspNetCore.Annotations.dll
 C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Scrutor.dll
+C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Swashbuckle.AspNetCore.Filters.dll
+C:\Users\Giovannyi\source\repos\IMASD\Nomina2022\bin\Debug\net5.0\Swashbuckle.AspNetCore.Filters.Abstractions.dll
